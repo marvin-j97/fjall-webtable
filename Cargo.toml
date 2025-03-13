@@ -1,0 +1,12 @@
+[package]
+name = "webtable"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+byteview = "0.5.4"
+fjall = "2.6.7"
+md5 = "0.7.0"
+reqwest = { version = "0.12.14", features = ["blocking"] }
+self_cell = "1.1.0"
+visdom = "1.0.2"
