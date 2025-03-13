@@ -1,4 +1,4 @@
-use super::wide_column::{Cell, WideColumnDb};
+use super::wide_column::{Cell, WideColumnTable};
 use fjall::Keyspace;
 use visdom::{Vis, types::Elements};
 
@@ -12,16 +12,16 @@ pub struct Webtable {
     #[allow(unused)]
     keyspace: Keyspace,
 
-    inner: WideColumnDb,
-    lg_meta: WideColumnDb,
-    lg_contents: WideColumnDb,
+    inner: WideColumnTable,
+    lg_meta: WideColumnTable,
+    lg_contents: WideColumnTable,
 }
 
 impl Webtable {
     pub fn new(keyspace: Keyspace) -> fjall::Result<Self> {
-        let inner = WideColumnDb::new(keyspace.clone(), "webtable")?;
-        let lg_meta = WideColumnDb::new(keyspace.clone(), "lg_meta")?;
-        let lg_contents = WideColumnDb::new(keyspace.clone(), "lg_contents")?;
+        let inner = WideColumnTable::new(keyspace.clone(), "webtable")?;
+        let lg_meta = WideColumnTable::new(keyspace.clone(), "lg_meta")?;
+        let lg_contents = WideColumnTable::new(keyspace.clone(), "lg_contents")?;
 
         Ok(Self {
             keyspace,

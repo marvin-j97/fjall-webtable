@@ -4,7 +4,7 @@ use self_cell::self_cell;
 
 pub type Timestamp = u64;
 
-pub struct WideColumnDb {
+pub struct WideColumnTable {
     #[allow(unused)]
     keyspace: Keyspace,
 
@@ -113,7 +113,7 @@ impl Cell {
     }
 }
 
-impl WideColumnDb {
+impl WideColumnTable {
     pub fn new(keyspace: Keyspace, name: &str) -> fjall::Result<Self> {
         let primary = keyspace.open_partition(name, Default::default())?;
         Ok(Self { keyspace, primary })
