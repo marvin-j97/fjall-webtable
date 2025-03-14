@@ -4,28 +4,30 @@ mod wide_column;
 use fjall::Config;
 use webtable::Webtable;
 
-fn main() -> fjall::Result<()> {
+fn main() -> anyhow::Result<()> {
     let keyspace = Config::default().temporary(true).open()?;
     let webtable = Webtable::new(keyspace)?;
 
     for url in ["https://vedur.is", "https://news.ycombinator.com"] {
         eprintln!("Scraping {url:?}");
-        let res = reqwest::blocking::get(url).unwrap();
+        let res = reqwest::blocking::get(url)?;
 
         if res.status().is_success() {
-            let html = res.text().unwrap();
+            let html = res.text()?;
             webtable.insert(url, &html)?;
         }
     }
 
-    eprintln!("Scanning database");
+    eprintln!("-- Scanning metadata --");
 
     for cell in webtable.iter_metadata() {
         let cell = cell?;
         eprintln!("{cell:?}");
     }
 
-    for cell in webtable.iter_anchors_to_page("org.duckdb") {
+    eprintln!("-- Scanning anchors --");
+
+    for cell in webtable.iter_anchors_to_page("") {
         let cell = cell?;
         eprintln!("{cell:?}");
     }

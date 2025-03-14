@@ -1,5 +1,5 @@
 use byteview::ByteView;
-use fjall::{Keyspace, KvPair, Partition, Slice};
+use fjall::{Keyspace, KvPair, KvSeparationOptions, Partition, PartitionCreateOptions, Slice};
 use self_cell::self_cell;
 
 pub type Timestamp = u64;
@@ -115,7 +115,10 @@ impl Cell {
 
 impl WideColumnTable {
     pub fn new(keyspace: Keyspace, name: &str) -> fjall::Result<Self> {
-        let primary = keyspace.open_partition(name, Default::default())?;
+        let primary = keyspace.open_partition(
+            name,
+            PartitionCreateOptions::default().with_kv_separation(KvSeparationOptions::default()),
+        )?;
         Ok(Self { keyspace, primary })
     }
 
@@ -154,7 +157,7 @@ impl WideColumnTable {
                     column_family,
                     column_qualifier,
                     timestamp,
-                    value: &v,
+                    value: v,
                 }
             }))
         })

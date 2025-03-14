@@ -1666,6 +1666,7 @@ dependencies = [
 name = "webtable"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "byteview",
  "fjall",
  "md5",

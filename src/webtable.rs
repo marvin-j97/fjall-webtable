@@ -36,6 +36,10 @@ impl Webtable {
         anchors
     }
 
+    pub fn iter_contents(&self) -> impl Iterator<Item = fjall::Result<Cell>> {
+        self.lg_contents.prefix("")
+    }
+
     pub fn iter_primary(&self) -> impl Iterator<Item = fjall::Result<Cell>> {
         self.inner.prefix("")
     }
@@ -48,7 +52,12 @@ impl Webtable {
         &self,
         rev_domain: &str,
     ) -> impl Iterator<Item = fjall::Result<Cell>> {
-        let prefix = format!("{rev_domain}\0anchor\0");
+        let prefix = if rev_domain.is_empty() {
+            String::new()
+        } else {
+            format!("{rev_domain}\0anchor\0")
+        };
+
         self.inner.prefix(prefix)
     }
 
@@ -82,7 +91,7 @@ impl Webtable {
             "checksum",
             "",
             Some(unix_timestamp),
-            md5::compute(&html).as_slice(),
+            md5::compute(html).as_slice(),
         )?;
 
         for anchor in Self::parse_anchors(&root) {
@@ -106,13 +115,15 @@ impl Webtable {
 
             let mut splits = href.split('/');
             let domain = splits.next().unwrap();
-            // let _pathname = format!("/{}", splits.next().unwrap());
+
+            let pathname = format!("/{}", splits.collect::<Vec<_>>().join("/"));
             let rev_domain = reverse_domain_key(domain);
+            let href = format!("{rev_domain}{pathname}");
 
             let text = anchor.text();
 
             self.inner
-                .insert(&rev_domain, "anchor", url, None, text.as_bytes())?;
+                .insert(&href, "anchor", url, Some(unix_timestamp), text.as_bytes())?;
         }
 
         Ok(())
