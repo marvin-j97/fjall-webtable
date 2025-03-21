@@ -56,7 +56,7 @@ fn serialize_cell_key(
     Slice::from(key)
 }
 
-struct CellInner<'a> {
+struct TableCellInner<'a> {
     row_key: &'a str,
     column_family: &'a str,
     column_qualifier: &'a str,
@@ -65,15 +65,15 @@ struct CellInner<'a> {
 }
 
 self_cell!(
-    pub struct Cell {
+    pub struct TableCell {
         owner: KvPair,
 
         #[covariant]
-        dependent: CellInner,
+        dependent: TableCellInner,
     }
 );
 
-impl std::fmt::Debug for Cell {
+impl std::fmt::Debug for TableCell {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -91,9 +91,9 @@ impl std::fmt::Debug for Cell {
     }
 }
 
-impl Cell {
+impl TableCell {
     pub fn value(&self) -> &[u8] {
-        &self.borrow_dependent().value
+        self.borrow_dependent().value
     }
 
     pub fn timestamp(&self) -> Timestamp {
@@ -101,11 +101,11 @@ impl Cell {
     }
 
     pub fn column_family(&self) -> &str {
-        &self.borrow_dependent().column_family
+        self.borrow_dependent().column_family
     }
 
     pub fn column_qualifier(&self) -> &str {
-        &self.borrow_dependent().column_qualifier
+        self.borrow_dependent().column_qualifier
     }
 
     pub fn row_key(&self) -> &str {
@@ -138,21 +138,19 @@ impl WideColumnTable {
     pub fn prefix(
         &self,
         prefix: impl Into<fjall::Slice>,
-    ) -> impl Iterator<Item = fjall::Result<Cell>> {
+    ) -> impl Iterator<Item = fjall::Result<TableCell>> {
         self.primary.prefix(prefix.into()).map(|kv| {
-            Ok(Cell::new(kv?, |(k, v)| {
+            Ok(TableCell::new(kv?, |(k, v)| {
                 let mut splits = k.split(|&x| x == b'\0');
                 let row_key = std::str::from_utf8(splits.next().unwrap()).unwrap();
                 let column_family = std::str::from_utf8(splits.next().unwrap()).unwrap();
                 let column_qualifier = std::str::from_utf8(splits.next().unwrap()).unwrap();
-                let ts_bytes = splits.next().unwrap();
-                debug_assert_eq!(std::mem::size_of::<Timestamp>(), ts_bytes.len());
 
                 let mut buf = [0; std::mem::size_of::<Timestamp>()];
-                buf.copy_from_slice(ts_bytes);
+                buf.copy_from_slice(&k[k.len() - std::mem::size_of::<Timestamp>()..]);
                 let timestamp = !Timestamp::from_be_bytes(buf);
 
-                CellInner {
+                TableCellInner {
                     row_key,
                     column_family,
                     column_qualifier,

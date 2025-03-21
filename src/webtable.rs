@@ -1,4 +1,4 @@
-use super::wide_column::{Cell, WideColumnTable};
+use super::wide_column::{TableCell, WideColumnTable};
 use fjall::Keyspace;
 use visdom::{Vis, types::Elements};
 
@@ -36,22 +36,22 @@ impl Webtable {
         anchors
     }
 
-    pub fn iter_contents(&self) -> impl Iterator<Item = fjall::Result<Cell>> {
+    pub fn iter_contents(&self) -> impl Iterator<Item = fjall::Result<TableCell>> {
         self.lg_contents.prefix("")
     }
 
-    pub fn iter_primary(&self) -> impl Iterator<Item = fjall::Result<Cell>> {
+    pub fn iter_primary(&self) -> impl Iterator<Item = fjall::Result<TableCell>> {
         self.inner.prefix("")
     }
 
-    pub fn iter_metadata(&self) -> impl Iterator<Item = fjall::Result<Cell>> {
+    pub fn iter_metadata(&self) -> impl Iterator<Item = fjall::Result<TableCell>> {
         self.lg_meta.prefix("")
     }
 
     pub fn iter_anchors_to_page(
         &self,
         rev_domain: &str,
-    ) -> impl Iterator<Item = fjall::Result<Cell>> {
+    ) -> impl Iterator<Item = fjall::Result<TableCell>> {
         let prefix = if rev_domain.is_empty() {
             String::new()
         } else {
@@ -69,7 +69,10 @@ impl Webtable {
             .unwrap()
             .as_secs();
 
-        let root = Vis::load(html).unwrap();
+        let Ok(root) = Vis::load(html) else {
+            eprintln!("could not parse HTML for {url:?}");
+            return Ok(());
+        };
 
         if let Some(lang) = root.find("html").attr("lang") {
             let lang = lang.to_string().to_uppercase();

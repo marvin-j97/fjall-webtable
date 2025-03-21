@@ -6,6 +6,7 @@ use webtable::Webtable;
 
 fn main() -> anyhow::Result<()> {
     let keyspace = Config::default().temporary(true).open()?;
+
     let webtable = Webtable::new(keyspace)?;
 
     for url in ["https://vedur.is", "https://news.ycombinator.com"] {
